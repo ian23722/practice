@@ -22,6 +22,9 @@ dependencies {
     // https://mvnrepository.com/artifact/org.projectlombok/lombok
     compileOnly("org.projectlombok:lombok:1.18.24")
 
+    // https://mvnrepository.com/artifact/com.google.guava/guava
+    implementation("com.google.guava:guava:31.1-jre")
+
 }
 
 tasks.test {

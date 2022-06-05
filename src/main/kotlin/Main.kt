@@ -1,76 +1,41 @@
-import java.sql.Connection
-import java.sql.DriverManager
-import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.util.Properties
+import dao.MySqlStudentDao
+import domain.Student
 
-fun main(args: Array<String>) {
+val username = "app"
+val password = "1234"
+val jdbcUrl = "jdbc:mysql://144.24.86.115:3306/beta"
+
+fun main() {
     println("DB Connection test")
 
-    val app = App()
-    val student = Student(1, "ian", "123", 4)
-//    app.addStudent(student)
-    app.printStudents()
+    val studentDao = MySqlStudentDao(jdbcUrl, username, password)
+
+    println("clean up table")
+    studentDao.deleteAll()
+
+    val student1 = Student(2, "김서현", "124", 4)
+    val student2 = Student(3, "이가현", "125", 4)
+    val student3 = Student(4, "김나형", "126", 4)
+
+    println("students added")
+    studentDao.addStudent(student1)
+    studentDao.addStudent(student2)
+    studentDao.addStudent(student3)
+
+    studentDao.getStudents().forEach { student -> println(student) }
+
+    val student4 = Student(5, "김용철", "130", 4)
+
+    println("wrong student added")
+    studentDao.addStudent(student4)
+
+    studentDao.getStudents().forEach { student -> println(student) }
+
+    println("wrong student deleted")
+    studentDao.deleteStudents(student4.studentNumber)
+    studentDao.getStudents().forEach { student -> println(student) }
+
+    // This will delete all records in the student table comment out if you want to keep the records
+    println("clean up table")
+    studentDao.deleteAll()
 }
-
-class App() {
-    private val connection : Connection
-
-    init {
-        connection = connectDB() ?: throw RuntimeException("Could not connect the DB")
-        println(connection)
-    }
-
-    fun addStudent(student: Student) {
-        val stmt : PreparedStatement? = connection?.prepareStatement("INSERT INTO students VALUES (?, ?, ?, ?)");
-        stmt?.setInt(1, student.sid);
-        stmt?.setString(2, student.name);
-        stmt?.setString(3, student.studentNumber);
-        stmt?.setInt(4, student.test);
-        stmt?.executeUpdate();
-    }
-
-    fun printStudents() {
-        val students : List<Student> = getStudents() ?: return
-        students.forEach { student -> println(student) }
-
-    }
-
-    private fun getStudents() : List<Student>? {
-        val stmt : PreparedStatement = connection?.prepareStatement("SELECT sid, name, student_number, test FROM students")
-            ?: return null
-        try {
-            val studentList = mutableListOf<Student>()
-            val results : ResultSet = stmt.executeQuery()
-            while (results.next()) {
-                val sid = results.getInt("sid")
-                val name = results.getString("name")
-                val studentNumber = results.getString("student_number")
-                val test = results.getInt("test")
-                val student = Student(sid, name, studentNumber, test)
-                studentList.add(student)
-            }
-            return studentList
-        } catch (e: SQLException) {
-            e.printStackTrace()
-            return null
-        }
-    }
-
-    private fun connectDB() : Connection? {
-        val props = Properties()
-        props.put("user", "app")
-        props.put("password", "1234")
-        val conn : Connection
-        try {
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/beta", props)
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-            return null
-        }
-        return conn
-    }
-}
-
-data class Student(val sid: Int, val name: String, val studentNumber: String, val test: Int);
